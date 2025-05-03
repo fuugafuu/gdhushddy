@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>通信速度測定</title>
+  <title>通信速度測定（簡易版）</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -27,38 +27,34 @@
 </head>
 <body>
 
-<h1>通信速度測定サイト</h1>
+<h1>通信速度測定（簡易版）</h1>
 <button id="startBtn">測定開始</button>
 <div id="result"></div>
 
 <script>
-  const testFileUrl = "https://speed.hetzner.de/100MB.bin"; // ダウンロード用のテストファイル
-  const fileSizeInBytes = 100 * 1024 * 1024; // 100MB
-
   document.getElementById("startBtn").addEventListener("click", async () => {
     const resultDiv = document.getElementById("result");
     resultDiv.textContent = "測定中...";
 
+    // 適当なダミーデータを用意（メモリ上で）
+    const blob = new Blob([new ArrayBuffer(5 * 1024 * 1024)]); // 5MBのデータ
+    const url = URL.createObjectURL(blob);
+
     const startTime = performance.now();
     try {
-      const response = await fetch(testFileUrl, { method: "GET" });
-      const reader = response.body.getReader();
-      let receivedLength = 0;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        receivedLength += value.length;
-      }
-
+      const response = await fetch(url);
+      const data = await response.blob(); // 受け取る
       const endTime = performance.now();
+
       const durationInSeconds = (endTime - startTime) / 1000;
+      const fileSizeInBits = data.size * 8;
+      const speedMbps = (fileSizeInBits / durationInSeconds / 1000000).toFixed(2);
 
-      const speedMbps = (receivedLength * 8 / durationInSeconds / 1000000).toFixed(2);
-
-      resultDiv.textContent = `通信速度: ${speedMbps} Mbps`;
+      resultDiv.textContent = `通信速度（参考値）: ${speedMbps} Mbps`;
     } catch (error) {
       resultDiv.textContent = "測定失敗: " + error;
+    } finally {
+      URL.revokeObjectURL(url);
     }
   });
 </script>
