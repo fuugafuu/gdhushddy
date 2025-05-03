@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>通信速度測定</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 1.5em;
+    }
+  </style>
+</head>
+<body>
+
+<h1>通信速度測定サイト</h1>
+<button id="startBtn">測定開始</button>
+<div id="result"></div>
+
+<script>
+  const testFileUrl = "https://speed.hetzner.de/100MB.bin"; // ダウンロード用のテストファイル
+  const fileSizeInBytes = 100 * 1024 * 1024; // 100MB
+
+  document.getElementById("startBtn").addEventListener("click", async () => {
+    const resultDiv = document.getElementById("result");
+    resultDiv.textContent = "測定中...";
+
+    const startTime = performance.now();
+    try {
+      const response = await fetch(testFileUrl, { method: "GET" });
+      const reader = response.body.getReader();
+      let receivedLength = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        receivedLength += value.length;
+      }
+
+      const endTime = performance.now();
+      const durationInSeconds = (endTime - startTime) / 1000;
+
+      const speedMbps = (receivedLength * 8 / durationInSeconds / 1000000).toFixed(2);
+
+      resultDiv.textContent = `通信速度: ${speedMbps} Mbps`;
+    } catch (error) {
+      resultDiv.textContent = "測定失敗: " + error;
+    }
+  });
+</script>
+
+</body>
+</html>
